@@ -1,0 +1,2 @@
+# OrderTrack Pro - Dependencies
+Django>=5.0,<6.0

@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ action_title }} - OrderTrack Pro{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 860px;">
+
+  <!-- Breadcrumbs & Back -->
+  <div class="mb-3 d-flex align-items-center justify-content-between">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-0 small">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none">Dashboard</a></li>
+        {% if not is_create and order %}
+          <li class="breadcrumb-item"><a href="{% url 'order_detail' order.id %}" class="text-decoration-none">{{ order.order_id }}</a></li>
+        {% endif %}
+        <li class="breadcrumb-item active" aria-current="page">{{ action_title }}</li>
+      </ol>
+    </nav>
+    <a href="{% if not is_create and order %}{% url 'order_detail' order.id %}{% else %}{% url 'dashboard' %}{% endif %}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i>Back
+    </a>
+  </div>
+
+  <div class="card shadow-sm border-0 rounded-3">
+    <div class="card-header bg-white border-bottom py-3">
+      <div class="d-flex align-items-center gap-2">
+        <div class="p-2 bg-primary-subtle text-primary rounded-2">
+          <i class="bi bi-clipboard-plus fs-5"></i>
+        </div>
+        <div>
+          <h5 class="fw-bold mb-0 text-dark">{{ action_title }}</h5>
+          <small class="text-muted">Enter commercial kitchen equipment order specifications and stage progress.</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body p-4">
+      <form method="POST" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger py-2 small">
+            {% for error in form.non_field_errors %}
+              <div><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <!-- Section 1: Core Order & Client Info -->
+        <div class="mb-4">
+          <h6 class="fw-bold text-primary mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-info-circle-fill"></i> 1. Order & Customer Details
+          </h6>
+          <div class="row g-3">
+            <!-- Order ID -->
+            <div class="col-12 col-md-4">
+              <label for="{{ form.order_id.id_for_label }}" class="form-label small fw-semibold">
+                Order ID <span class="text-danger">*</span>
+              </label>
+              {{ form.order_id }}
+              {% if form.order_id.errors %}
+                <div class="text-danger small mt-1">{{ form.order_id.errors.0 }}</div>
+              {% endif %}
+              <div class="form-text small">e.g. #101, ORD-2026-01</div>
+            </div>
+
+            <!-- Customer Name -->
+            <div class="col-12 col-md-8">
+              <label for="{{ form.customer_name.id_for_label }}" class="form-label small fw-semibold">
+                Customer Name <span class="text-danger">*</span>
+              </label>
+              {{ form.customer_name }}
+              {% if form.customer_name.errors %}
+                <div class="text-danger small mt-1">{{ form.customer_name.errors.0 }}</div>
+              {% endif %}
+              <div class="form-text small">Hotel, restaurant, or catering client</div>
+            </div>
+
+            <!-- Equipment Model -->
+            <div class="col-12 col-md-7">
+              <label for="{{ form.equipment_model.id_for_label }}" class="form-label small fw-semibold">
+                Equipment Model / Unit <span class="text-danger">*</span>
+              </label>
+              {{ form.equipment_model }}
+              {% if form.equipment_model.errors %}
+                <div class="text-danger small mt-1">{{ form.equipment_model.errors.0 }}</div>
+              {% endif %}
+              <div class="form-text small">e.g. 4-Burner Gas Range with Oven, 6-Pan Bain Marie</div>
+            </div>
+
+            <!-- Assigned Staff -->
+            <div class="col-12 col-md-5">
+              <label for="{{ form.assigned_staff.id_for_label }}" class="form-label small fw-semibold">
+                Assigned Staff / Lead <span class="text-danger">*</span>
+              </label>
+              {{ form.assigned_staff }}
+              {% if form.assigned_staff.errors %}
+                <div class="text-danger small mt-1">{{ form.assigned_staff.errors.0 }}</div>
+              {% endif %}
+              <div class="form-text small">Fabrication technician or team supervisor</div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="text-muted opacity-25 my-4">
+
+        <!-- Section 2: Delivery & Status -->
+        <div class="mb-4">
+          <h6 class="fw-bold text-primary mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-calendar2-check-fill"></i> 2. Schedule, Status & Specs
+          </h6>
+          <div class="row g-3">
+            <!-- Delivery Date -->
+            <div class="col-12 col-md-6">
+              <label for="{{ form.delivery_date.id_for_label }}" class="form-label small fw-semibold">
+                Delivery Due Date <span class="text-danger">*</span>
+              </label>
+              {{ form.delivery_date }}
+              {% if form.delivery_date.errors %}
+                <div class="text-danger small mt-1">{{ form.delivery_date.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Status -->
+            <div class="col-12 col-md-6">
+              <label for="{{ form.status.id_for_label }}" class="form-label small fw-semibold">
+                Overall Order Status <span class="text-danger">*</span>
+              </label>
+              {{ form.status }}
+              {% if form.status.errors %}
+                <div class="text-danger small mt-1">{{ form.status.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Technical Notes / Specifications -->
+            <div class="col-12">
+              <label for="{{ form.notes.id_for_label }}" class="form-label small fw-semibold">
+                Workshop Specifications & Notes
+              </label>
+              {{ form.notes }}
+              {% if form.notes.errors %}
+                <div class="text-danger small mt-1">{{ form.notes.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <hr class="text-muted opacity-25 my-4">
+
+        <!-- Section 3: 5 Production Stages -->
+        <div class="mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold text-primary mb-0 d-flex align-items-center gap-2">
+              <i class="bi bi-hammer"></i> 3. 5 Production Stages Tracker
+            </h6>
+            <small class="text-muted">Each stage automatically updates the 0% - 100% progress.</small>
+          </div>
+
+          <div class="row g-3">
+            <!-- Stage 1: Cutting -->
+            <div class="col-12 col-sm-6 col-md-4">
+              <div class="p-3 bg-light rounded-2 border">
+                <label for="{{ form.stage_cutting.id_for_label }}" class="form-label small fw-bold d-flex align-items-center gap-1">
+                  <i class="bi bi-scissors text-secondary"></i> Stage 1: Cutting
+                </label>
+                {{ form.stage_cutting }}
+              </div>
+            </div>
+
+            <!-- Stage 2: Welding -->
+            <div class="col-12 col-sm-6 col-md-4">
+              <div class="p-3 bg-light rounded-2 border">
+                <label for="{{ form.stage_welding.id_for_label }}" class="form-label small fw-bold d-flex align-items-center gap-1">
+                  <i class="bi bi-fire text-secondary"></i> Stage 2: Welding
+                </label>
+                {{ form.stage_welding }}
+              </div>
+            </div>
+
+            <!-- Stage 3: Glass -->
+            <div class="col-12 col-sm-6 col-md-4">
+              <div class="p-3 bg-light rounded-2 border">
+                <label for="{{ form.stage_glass.id_for_label }}" class="form-label small fw-bold d-flex align-items-center gap-1">
+                  <i class="bi bi-window text-secondary"></i> Stage 3: Glass
+                </label>
+                {{ form.stage_glass }}
+              </div>
+            </div>
+
+            <!-- Stage 4: Finishing -->
+            <div class="col-12 col-sm-6 col-md-6">
+              <div class="p-3 bg-light rounded-2 border">
+                <label for="{{ form.stage_finishing.id_for_label }}" class="form-label small fw-bold d-flex align-items-center gap-1">
+                  <i class="bi bi-brush text-secondary"></i> Stage 4: Finishing
+                </label>
+                {{ form.stage_finishing }}
+              </div>
+            </div>
+
+            <!-- Stage 5: QC -->
+            <div class="col-12 col-sm-12 col-md-6">
+              <div class="p-3 bg-light rounded-2 border">
+                <label for="{{ form.stage_qc.id_for_label }}" class="form-label small fw-bold d-flex align-items-center gap-1">
+                  <i class="bi bi-patch-check text-secondary"></i> Stage 5: QC (Quality Check)
+                </label>
+                {{ form.stage_qc }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+          <a href="{% if not is_create and order %}{% url 'order_detail' order.id %}{% else %}{% url 'dashboard' %}{% endif %}" class="btn btn-outline-secondary px-4">
+            Cancel
+          </a>
+          <button type="submit" class="btn btn-primary px-4 fw-semibold">
+            <i class="bi bi-check-lg me-1"></i> Save Order
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

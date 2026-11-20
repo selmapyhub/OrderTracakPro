@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order {{ order.order_id }} - OrderTrack Pro{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-lg-4 py-4" style="max-width: 1100px;">
+
+  <!-- Breadcrumbs & Actions -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-1 small">
+          <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none">Dashboard</a></li>
+          <li class="breadcrumb-item active" aria-current="page">{{ order.order_id }}</li>
+        </ol>
+      </nav>
+      <h3 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+        <span>Order {{ order.order_id }}</span>
+        <span class="badge-status {{ order.status_badge_class }} fs-6">
+          {{ order.get_status_display }}
+        </span>
+      </h3>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="d-flex align-items-center gap-2">
+      <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Dashboard
+      </a>
+      <a href="{% url 'order_update' order.id %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-pencil-square me-1"></i> Edit Order
+      </a>
+      <a href="{% url 'order_delete' order.id %}" class="btn btn-outline-danger btn-sm">
+        <i class="bi bi-trash me-1"></i> Delete
+      </a>
+      <button onclick="window.print()" class="btn btn-light btn-sm border d-none d-sm-inline-block" title="Print Job Sheet">
+        <i class="bi bi-printer me-1"></i> Print
+      </button>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left Column: Order Information & Specifications -->
+    <div class="col-12 col-lg-5">
+      <!-- Order Info Card -->
+      <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-header bg-white py-3 border-bottom">
+          <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-file-earmark-text text-primary me-2"></i>Order Information</h6>
+        </div>
+        <div class="card-body p-3">
+          <ul class="list-group list-group-flush small">
+            <li class="list-group-item d-flex justify-content-between px-0 py-2">
+              <span class="text-muted">Customer Name:</span>
+              <strong class="text-end text-dark">{{ order.customer_name }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between px-0 py-2">
+              <span class="text-muted">Equipment Model:</span>
+              <strong class="text-end text-dark">{{ order.equipment_model }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between px-0 py-2">
+              <span class="text-muted">Assigned Lead / Staff:</span>
+              <span class="badge bg-light text-dark border"><i class="bi bi-person me-1"></i>{{ order.assigned_staff }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between px-0 py-2">
+              <span class="text-muted">Delivery Due Date:</span>
+              <div>
+                <strong>{{ order.delivery_date|date:"F d, Y" }}</strong>
+                {% if order.is_overdue %}
+                  <div class="text-danger fw-bold text-end" style="font-size: 0.75rem;">
+                    Overdue by {{ order.days_remaining|stringformat:"+d"|slice:"1:" }} days
+                  </div>
+                {% else %}
+                  <div class="text-muted text-end" style="font-size: 0.75rem;">
+                    {{ order.days_remaining }} day{{ order.days_remaining|pluralize }} remaining
+                  </div>
+                {% endif %}
+              </div>
+            </li>
+            <li class="list-group-item d-flex justify-content-between px-0 py-2">
+              <span class="text-muted">Created:</span>
+              <span class="text-muted">{{ order.created_at|date:"M d, Y H:i" }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between px-0 py-2">
+              <span class="text-muted">Last Updated:</span>
+              <span class="text-muted">{{ order.updated_at|date:"M d, Y H:i" }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Workshop Technical Notes Card -->
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header bg-white py-3 border-bottom">
+          <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-journal-text text-primary me-2"></i>Technical Notes & Specs</h6>
+        </div>
+        <div class="card-body p-3">
+          {% if order.notes %}
+            <p class="small text-secondary mb-0" style="white-space: pre-line;">{{ order.notes }}</p>
+          {% else %}
+            <p class="text-muted small fst-italic mb-0">No custom metal gauge or workshop notes entered for this order.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: 5 Production Stages Timeline -->
+    <div class="col-12 col-lg-7">
+      <!-- Progress Bar Card -->
+      <div class="card shadow-sm border-0 rounded-3 p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0 text-dark">Overall Manufacturing Progress</h6>
+          <span class="fs-5 fw-bold text-primary">{{ order.progress_percentage }}%</span>
+        </div>
+        <div class="progress mb-2" style="height: 12px; border-radius: 6px;">
+          <div 
+            class="progress-bar {{ order.progress_bar_class }} progress-bar-striped progress-bar-animated" 
+            role="progressbar" 
+            style="width: {{ order.progress_percentage }}%;" 
+            aria-valuenow="{{ order.progress_percentage }}" 
+            aria-valuemin="0" 
+            aria-valuemax="100">
+          </div>
+        </div>
+        <div class="d-flex justify-content-between text-muted" style="font-size: 0.75rem;">
+          <span>0% Raw Material Blanking</span>
+          <span>50% Mid-Assembly</span>
+          <span>100% Quality Checked & Ready</span>
+        </div>
+      </div>
+
+      <!-- Stages Timeline -->
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+          <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-diagram-3-fill text-primary me-2"></i>5 Workshop Stages Workflow</h6>
+          <small class="text-muted">20% weight per stage</small>
+        </div>
+        <div class="card-body p-3">
+          <div class="d-flex flex-column gap-3">
+            {% for st in stages %}
+              <div class="timeline-stage-card {% if st.is_completed %}is-completed{% elif st.is_in_progress %}is-in-progress{% else %}is-pending{% endif %}">
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="summary-icon {% if st.is_completed %}icon-ontrack{% elif st.is_in_progress %}icon-urgent{% else %}icon-total{% endif %}">
+                      <i class="bi {{ st.icon }}"></i>
+                    </div>
+                    <div>
+                      <h6 class="fw-bold mb-0 text-dark">
+                        Stage {{ forloop.counter }}: {{ st.name }}
+                      </h6>
+                      <small class="text-muted">{{ st.description }}</small>
+                    </div>
+                  </div>
+
+                  <!-- Stage Status & Quick Cycle Button -->
+                  <div class="d-flex align-items-center gap-2 align-self-end align-self-sm-center">
+                    <span class="stage-pill status-{{ st.status }} px-3 py-1">
+                      {% if st.is_completed %}
+                        <i class="bi bi-check-circle-fill me-1"></i> Completed
+                      {% elif st.is_in_progress %}
+                        <i class="bi bi-arrow-repeat spin-icon me-1"></i> In Progress
+                      {% else %}
+                        <i class="bi bi-circle me-1"></i> Pending
+                      {% endif %}
+                    </span>
+
+                    <!-- Quick Cycle Form -->
+                    <form method="POST" action="{% url 'quick_stage_update' order.id %}" class="d-inline">
+                      {% csrf_token %}
+                      <input type="hidden" name="stage" value="{{ st.key }}">
+                      <button type="submit" class="btn btn-outline-dark btn-sm" title="Advance to next state">
+                        <i class="bi bi-arrow-right-short"></i> Cycle
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

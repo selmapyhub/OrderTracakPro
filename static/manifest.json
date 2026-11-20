@@ -1,0 +1,27 @@
+{
+  "name": "OrderTrack Pro - Kitchen Equipment Production Tracking",
+  "short_name": "OrderTrack Pro",
+  "description": "Production tracking web app for commercial kitchen equipment manufacturing.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#0f172a",
+  "background_color": "#f8fafc",
+  "categories": ["productivity", "business"],
+  "icons": [
+    {
+      "src": "/static/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

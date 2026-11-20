@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">OrderTrack Pro</string>
+    <string name="connection_error_title">Connection Error</string>
+    <string name="connection_error_desc">Unable to connect to the OrderTrack Pro server.\nPlease verify that your Django server is running.</string>
+    <string name="retry_button">Retry Connection</string>
+</resources>

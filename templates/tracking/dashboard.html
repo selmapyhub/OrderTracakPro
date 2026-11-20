@@ -1,0 +1,435 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Workshop Dashboard - OrderTrack Pro{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-lg-4 pb-5">
+
+  <!-- =========================================================================
+       1. Top Summary Cards (KPI Metrics)
+       ========================================================================= -->
+  <div class="row g-3 mb-4">
+    <!-- Total Orders -->
+    <div class="col-6 col-md-4 col-xl">
+      <a href="{% url 'dashboard' %}?status=all" class="summary-card card-total p-3 {% if current_status == 'all' %}active-card{% endif %}">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <span class="summary-label">Total Orders</span>
+          <div class="summary-icon icon-total">
+            <i class="bi bi-stack"></i>
+          </div>
+        </div>
+        <div class="summary-count text-dark">{{ summary.total }}</div>
+        <div class="text-muted small mt-1">All registered jobs</div>
+      </a>
+    </div>
+
+    <!-- Active Orders (In Workshop Floor) -->
+    <div class="col-6 col-md-4 col-xl">
+      <a href="{% url 'dashboard' %}?status=active" class="summary-card card-active p-3 {% if current_status == 'active' %}active-card{% endif %}">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <span class="summary-label">Active Floor</span>
+          <div class="summary-icon icon-active">
+            <i class="bi bi-tools"></i>
+          </div>
+        </div>
+        <div class="summary-count text-primary">{{ summary.active }}</div>
+        <div class="text-muted small mt-1">In fabrication/assembly</div>
+      </a>
+    </div>
+
+    <!-- On Track (On Schedule) -->
+    <div class="col-6 col-md-4 col-xl">
+      <a href="{% url 'dashboard' %}?status=ON_TRACK" class="summary-card card-ontrack p-3 {% if current_status == 'ON_TRACK' %}active-card{% endif %}">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <span class="summary-label">On Track</span>
+          <div class="summary-icon icon-ontrack">
+            <i class="bi bi-check2-circle"></i>
+          </div>
+        </div>
+        <div class="summary-count text-success">{{ summary.on_track }}</div>
+        <div class="text-muted small mt-1">Progressing normally</div>
+      </a>
+    </div>
+
+    <!-- Urgent (Needs Attention) -->
+    <div class="col-6 col-md-4 col-xl">
+      <a href="{% url 'dashboard' %}?status=URGENT" class="summary-card card-urgent p-3 {% if current_status == 'URGENT' %}active-card{% endif %}">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <span class="summary-label">Urgent</span>
+          <div class="summary-icon icon-urgent">
+            <i class="bi bi-exclamation-octagon-fill"></i>
+          </div>
+        </div>
+        <div class="summary-count text-danger">{{ summary.urgent }}</div>
+        <div class="text-muted small mt-1">High priority / tight SLA</div>
+      </a>
+    </div>
+
+    <!-- Completed (Ready for Delivery) -->
+    <div class="col-12 col-md-4 col-xl">
+      <a href="{% url 'dashboard' %}?status=COMPLETED" class="summary-card card-completed p-3 {% if current_status == 'COMPLETED' %}active-card{% endif %}">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <span class="summary-label">Completed</span>
+          <div class="summary-icon icon-completed">
+            <i class="bi bi-box-seam-fill"></i>
+          </div>
+        </div>
+        <div class="summary-count text-info">{{ summary.completed }}</div>
+        <div class="text-muted small mt-1">Ready for dispatch</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       2. Search, Filter Bar & View Switcher
+       ========================================================================= -->
+  <div class="card filter-card p-3 mb-4">
+    <div class="row g-3 align-items-center">
+      <!-- Search Input -->
+      <div class="col-12 col-lg-5">
+        <form method="GET" action="{% url 'dashboard' %}" class="d-flex search-input-group">
+          {% if current_status != 'all' %}
+            <input type="hidden" name="status" value="{{ current_status }}">
+          {% endif %}
+          <input type="hidden" name="view" value="{{ view_mode }}">
+          <input 
+            type="text" 
+            name="q" 
+            class="form-control" 
+            placeholder="Search Customer, Equipment Model, or Order ID (#101)..." 
+            value="{{ search_query }}"
+            aria-label="Search Orders">
+          <button class="btn btn-dark px-3" type="submit" title="Search">
+            <i class="bi bi-search"></i>
+          </button>
+          {% if search_query %}
+            <a href="{% url 'dashboard' %}?status={{ current_status }}&view={{ view_mode }}" class="btn btn-outline-secondary" title="Clear Search">
+              <i class="bi bi-x-lg"></i>
+            </a>
+          {% endif %}
+        </form>
+      </div>
+
+      <!-- Status Filter Buttons -->
+      <div class="col-12 col-lg-5">
+        <div class="d-flex flex-wrap gap-1 align-items-center">
+          <span class="small fw-bold text-muted me-1 d-none d-sm-inline">Filter:</span>
+          <a href="{% url 'dashboard' %}?status=all&q={{ search_query }}&view={{ view_mode }}" 
+             class="btn btn-filter {% if current_status == 'all' %}active{% endif %}">
+            All
+          </a>
+          <a href="{% url 'dashboard' %}?status=ON_TRACK&q={{ search_query }}&view={{ view_mode }}" 
+             class="btn btn-filter {% if current_status == 'ON_TRACK' %}active{% endif %}">
+            <i class="bi bi-circle-fill text-success small me-1"></i>On Track
+          </a>
+          <a href="{% url 'dashboard' %}?status=URGENT&q={{ search_query }}&view={{ view_mode }}" 
+             class="btn btn-filter {% if current_status == 'URGENT' %}active{% endif %}">
+            <i class="bi bi-circle-fill text-danger small me-1"></i>Urgent
+          </a>
+          <a href="{% url 'dashboard' %}?status=DELAYED&q={{ search_query }}&view={{ view_mode }}" 
+             class="btn btn-filter {% if current_status == 'DELAYED' %}active{% endif %}">
+            <i class="bi bi-circle-fill text-warning small me-1"></i>Delayed
+          </a>
+          <a href="{% url 'dashboard' %}?status=COMPLETED&q={{ search_query }}&view={{ view_mode }}" 
+             class="btn btn-filter {% if current_status == 'COMPLETED' %}active{% endif %}">
+            <i class="bi bi-circle-fill text-info small me-1"></i>Completed
+          </a>
+        </div>
+      </div>
+
+      <!-- View Switcher (Table vs Card) -->
+      <div class="col-12 col-lg-2 text-lg-end">
+        <div class="btn-group" role="group" aria-label="View toggle">
+          <button type="button" class="btn btn-sm btn-outline-secondary {% if view_mode == 'table' %}active{% endif %}" id="btn-view-table" title="Table View">
+            <i class="bi bi-table me-1"></i> Table
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary {% if view_mode == 'card' %}active{% endif %}" id="btn-view-card" title="Card View">
+            <i class="bi bi-grid-fill me-1"></i> Cards
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage Helper Tip -->
+  <div class="d-flex align-items-center justify-content-between mb-3 text-muted small px-1">
+    <div>
+      <i class="bi bi-hand-index-thumb me-1 text-primary"></i>
+      <span class="d-none d-md-inline">Tip: <strong>Click any stage pill</strong> (Cutting, Welding, Glass, Finishing, QC) to advance status instantly.</span>
+      <span class="d-md-none">Tap stage pills to advance production.</span>
+    </div>
+    <div>
+      Showing <strong>{{ orders.count }}</strong> order{{ orders.count|pluralize }}
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       3A. Table View
+       ========================================================================= -->
+  <div id="container-view-table" class="{% if view_mode == 'card' %}d-none{% endif %}">
+    {% if orders %}
+      <div class="table-responsive orders-table">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th scope="col" style="min-width: 110px;">Order ID</th>
+              <th scope="col" style="min-width: 220px;">Customer & Model</th>
+              <th scope="col" style="min-width: 140px;">Assigned Staff</th>
+              <th scope="col" style="min-width: 120px;">Due Date</th>
+              <th scope="col" style="min-width: 250px;">Production Stages (5)</th>
+              <th scope="col" style="min-width: 120px;">Progress</th>
+              <th scope="col" style="min-width: 110px;">Status</th>
+              <th scope="col" class="text-end" style="min-width: 110px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in orders %}
+              <tr id="order-row-{{ order.id }}">
+                <!-- Order ID -->
+                <td>
+                  <a href="{% url 'order_detail' order.id %}" class="fw-bold text-decoration-none text-dark d-flex align-items-center gap-1">
+                    <span>{{ order.order_id }}</span>
+                  </a>
+                  <span class="badge bg-light text-secondary border mt-1 font-monospace" style="font-size: 0.65rem;">
+                    #{{ order.id }}
+                  </span>
+                </td>
+
+                <!-- Customer & Equipment Model -->
+                <td>
+                  <div class="fw-semibold text-truncate" style="max-width: 240px;" title="{{ order.customer_name }}">
+                    {{ order.customer_name }}
+                  </div>
+                  <div class="text-muted small text-truncate" style="max-width: 240px;" title="{{ order.equipment_model }}">
+                    <i class="bi bi-gear small me-1"></i>{{ order.equipment_model }}
+                  </div>
+                </td>
+
+                <!-- Assigned Staff -->
+                <td>
+                  <div class="d-flex align-items-center gap-1 text-truncate" style="max-width: 140px;" title="{{ order.assigned_staff }}">
+                    <i class="bi bi-person-badge text-muted"></i>
+                    <span class="small">{{ order.assigned_staff }}</span>
+                  </div>
+                </td>
+
+                <!-- Due Date -->
+                <td>
+                  <div class="small fw-semibold">{{ order.delivery_date|date:"M d, Y" }}</div>
+                  {% if order.is_overdue %}
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.68rem;">
+                      Overdue ({{ order.days_remaining|stringformat:"+d" }}d)
+                    </span>
+                  {% elif order.status == 'COMPLETED' %}
+                    <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.68rem;">
+                      Delivered
+                    </span>
+                  {% else %}
+                    <span class="text-muted" style="font-size: 0.72rem;">
+                      {{ order.days_remaining }} day{{ order.days_remaining|pluralize }} left
+                    </span>
+                  {% endif %}
+                </td>
+
+                <!-- 5 Production Stages -->
+                <td>
+                  <div class="stage-tracker-container">
+                    {% for st in order.get_stages_info %}
+                      <span 
+                        class="stage-pill status-{{ st.status }} interactive-stage-pill"
+                        data-order-id="{{ order.id }}"
+                        data-stage-key="{{ st.key }}"
+                        title="{{ st.name }}: {{ st.status_label }} (Click to cycle)">
+                        {% if st.status == 'COMPLETED' %}
+                          <i class="bi bi-check-circle-fill"></i>
+                        {% elif st.status == 'IN_PROGRESS' %}
+                          <i class="bi bi-arrow-repeat spin-icon"></i>
+                        {% else %}
+                          <i class="bi bi-circle"></i>
+                        {% endif %}
+                        <span>{{ st.name|slice:":4"|upper }}</span>
+                      </span>
+                    {% endfor %}
+                  </div>
+                </td>
+
+                <!-- Progress Bar & Percentage -->
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="progress flex-grow-1" style="height: 8px; border-radius: 4px;">
+                      <div 
+                        class="progress-bar {{ order.progress_bar_class }} order-progress-bar-{{ order.id }}" 
+                        role="progressbar" 
+                        style="width: {{ order.progress_percentage }}%;" 
+                        aria-valuenow="{{ order.progress_percentage }}" 
+                        aria-valuemin="0" 
+                        aria-valuemax="100">
+                      </div>
+                    </div>
+                    <span class="small fw-bold order-progress-bar-{{ order.id }}" style="font-size: 0.75rem; min-width: 32px;">
+                      {{ order.progress_percentage }}%
+                    </span>
+                  </div>
+                </td>
+
+                <!-- Status Badge -->
+                <td>
+                  <span class="badge-status {{ order.status_badge_class }} order-status-badge-{{ order.id }}">
+                    {{ order.get_status_display }}
+                  </span>
+                </td>
+
+                <!-- Actions -->
+                <td class="text-end">
+                  <div class="btn-group btn-group-sm">
+                    <a href="{% url 'order_detail' order.id %}" class="btn btn-outline-secondary" title="View Details">
+                      <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{% url 'order_update' order.id %}" class="btn btn-outline-primary" title="Edit Order">
+                      <i class="bi bi-pencil-square"></i>
+                    </a>
+                    <a href="{% url 'order_delete' order.id %}" class="btn btn-outline-danger" title="Delete Order">
+                      <i class="bi bi-trash"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="card p-5 text-center bg-white border">
+        <div class="text-muted mb-3"><i class="bi bi-inbox fs-1"></i></div>
+        <h5 class="fw-bold">No orders found</h5>
+        <p class="text-muted small">No production orders matched your query or filter criteria.</p>
+        <div class="d-flex justify-content-center gap-2 mt-2">
+          <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">Clear Filters</a>
+          <a href="{% url 'order_create' %}" class="btn btn-primary btn-sm">+ Add New Order</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- =========================================================================
+       3B. Card View (Mobile & Tablet Friendly)
+       ========================================================================= -->
+  <div id="container-view-card" class="{% if view_mode != 'card' %}d-none{% endif %}">
+    {% if orders %}
+      <div class="row g-3">
+        {% for order in orders %}
+          <div class="col-12 col-md-6 col-xl-4">
+            <div class="order-grid-card">
+              <!-- Card Header -->
+              <div class="order-grid-header d-flex justify-content-between align-items-center">
+                <a href="{% url 'order_detail' order.id %}" class="fw-bold text-decoration-none text-dark fs-6 d-flex align-items-center gap-2">
+                  <span>{{ order.order_id }}</span>
+                </a>
+                <span class="badge-status {{ order.status_badge_class }} order-status-badge-{{ order.id }}">
+                  {{ order.get_status_display }}
+                </span>
+              </div>
+
+              <!-- Card Body -->
+              <div class="order-grid-body">
+                <!-- Customer & Model -->
+                <h6 class="fw-bold mb-1 text-dark text-truncate" title="{{ order.customer_name }}">
+                  {{ order.customer_name }}
+                </h6>
+                <div class="text-muted small mb-3 text-truncate" title="{{ order.equipment_model }}">
+                  <i class="bi bi-gear-fill text-secondary me-1"></i>{{ order.equipment_model }}
+                </div>
+
+                <!-- Info Grid -->
+                <div class="row g-2 small text-muted mb-3">
+                  <div class="col-6">
+                    <i class="bi bi-person-badge me-1"></i>{{ order.assigned_staff }}
+                  </div>
+                  <div class="col-6 text-end">
+                    <i class="bi bi-calendar-event me-1"></i>
+                    {% if order.is_overdue %}
+                      <span class="text-danger fw-bold">{{ order.delivery_date|date:"M d" }} (Overdue)</span>
+                    {% else %}
+                      <span>{{ order.delivery_date|date:"M d, Y" }}</span>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- 5 Production Stages Tracker -->
+                <div class="mb-3">
+                  <label class="form-label text-muted text-uppercase fw-bold" style="font-size: 0.68rem; letter-spacing: 0.05em;">
+                    Production Stages (Tap to advance)
+                  </label>
+                  <div class="d-flex flex-wrap gap-1">
+                    {% for st in order.get_stages_info %}
+                      <span 
+                        class="stage-pill status-{{ st.status }} interactive-stage-pill flex-grow-1 text-center py-1"
+                        data-order-id="{{ order.id }}"
+                        data-stage-key="{{ st.key }}"
+                        title="{{ st.name }}: {{ st.status_label }}">
+                        {% if st.status == 'COMPLETED' %}
+                          <i class="bi bi-check-circle-fill"></i>
+                        {% elif st.status == 'IN_PROGRESS' %}
+                          <i class="bi bi-arrow-repeat spin-icon"></i>
+                        {% else %}
+                          <i class="bi bi-circle"></i>
+                        {% endif %}
+                        <span>{{ st.name }}</span>
+                      </span>
+                    {% endfor %}
+                  </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div>
+                  <div class="d-flex justify-content-between small mb-1">
+                    <span class="text-muted" style="font-size: 0.72rem;">Fabrication Progress</span>
+                    <span class="fw-bold order-progress-bar-{{ order.id }}" style="font-size: 0.72rem;">{{ order.progress_percentage }}%</span>
+                  </div>
+                  <div class="progress" style="height: 6px;">
+                    <div 
+                      class="progress-bar {{ order.progress_bar_class }} order-progress-bar-{{ order.id }}" 
+                      role="progressbar" 
+                      style="width: {{ order.progress_percentage }}%;" 
+                      aria-valuenow="{{ order.progress_percentage }}" 
+                      aria-valuemin="0" 
+                      aria-valuemax="100">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card Footer -->
+              <div class="order-grid-footer d-flex justify-content-between align-items-center">
+                <a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-link text-decoration-none px-0 text-primary fw-semibold">
+                  View Full Workflow &rarr;
+                </a>
+                <div class="btn-group btn-group-sm">
+                  <a href="{% url 'order_update' order.id %}" class="btn btn-outline-secondary" title="Edit">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <a href="{% url 'order_delete' order.id %}" class="btn btn-outline-danger" title="Delete">
+                    <i class="bi bi-trash"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card p-5 text-center bg-white border">
+        <div class="text-muted mb-3"><i class="bi bi-inbox fs-1"></i></div>
+        <h5 class="fw-bold">No orders found</h5>
+        <p class="text-muted small">No production orders matched your query or filter criteria.</p>
+        <div class="d-flex justify-content-center gap-2 mt-2">
+          <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">Clear Filters</a>
+          <a href="{% url 'order_create' %}" class="btn btn-primary btn-sm">+ Add New Order</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
